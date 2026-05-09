@@ -210,24 +210,59 @@ async function getNextQueueNum() {
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  EXIT LISTENERS — auto-cancel when tab is closed or navigated away
+//  SESSION PERSISTENCE
+//  Uses localStorage so it survives tab close + reopen.
+//  sessionStorage would be wiped when the tab is closed entirely.
+// ══════════════════════════════════════════════════════════════════
+function saveSession() {
+  if (window._state.studentId) {
+    localStorage.setItem(
+      "mq_session",
+      JSON.stringify({
+        studentId: window._state.studentId,
+        studentData: window._state.studentData,
+      }),
+    );
+  }
+}
+
+function clearSession() {
+  localStorage.removeItem("mq_session");
+}
+
+function restoreSession() {
+  try {
+    const raw = localStorage.getItem("mq_session");
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.studentId || !parsed.studentData) return false;
+
+    window._state.studentId = parsed.studentId;
+    window._state.studentData = parsed.studentData;
+    window._state.role = "student";
+
+    const nameEl = document.getElementById("student-nav-name");
+    if (nameEl) nameEl.textContent = parsed.studentData.name;
+
+    showPage("page-student");
+    subscribeStudentQueue();
+    registerExitListeners();
+    return true;
+  } catch (e) {
+    console.warn("Session restore failed:", e);
+    clearSession();
+    return false;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  EXIT LISTENERS — only save session, never auto-cancel
 // ══════════════════════════════════════════════════════════════════
 function registerExitListeners() {
-  // Remove any previously registered listeners first
   unregisterExitListeners();
-
   window._exitHandler = function () {
-    if (window._state.studentId) {
-      window.studentLogout(true);
-    }
+    saveSession();
   };
-
-  window._visibilityHandler = function () {
-    if (document.visibilityState === "hidden" && window._state.studentId) {
-      window.studentLogout(true);
-    }
-  };
-
   window.addEventListener("beforeunload", window._exitHandler);
 }
 
@@ -273,6 +308,9 @@ window.studentCheckIn = async function () {
     window._state.studentId = res.key;
     window._state.studentData = record;
     window._state.role = "student";
+
+    saveSession(); // persist immediately after joining
+
     document.getElementById("student-nav-name").textContent = name;
     showPage("page-student");
     subscribeStudentQueue();
@@ -299,12 +337,11 @@ function subscribeStudentQueue() {
 
     const all = Object.entries(data).map(([k, v]) => ({ ...v, _fbKey: k }));
 
-    const waiting = sortQueue(all.filter((x) => x.status === "waiting"));
-
-    // Keep studentData status in sync so logout guard is accurate
+    // Keep studentData status in sync
     const me = all.find((x) => x._fbKey === window._state.studentId);
     if (me && window._state.studentData) {
       window._state.studentData.status = me.status;
+      saveSession(); // keep localStorage current
     }
 
     renderPublicQueue(all);
@@ -349,7 +386,7 @@ function updateStudentTicket(all) {
 
   const waiting = sortQueue(all.filter((x) => x.status === "waiting"));
   const myPos = waiting.findIndex((x) => x._fbKey === window._state.studentId);
-  const pos = myPos + 1; // ✅ 1-based position, or 0 if not found
+  const pos = myPos + 1;
 
   document.getElementById("student-q-num").textContent = myPos >= 0 ? pos : "—";
 
@@ -386,9 +423,9 @@ function updateStudentTicket(all) {
   window._lastStatus = me.status;
 
   const total = waiting.length;
-  document.getElementById("student-position").textContent = pos > 0 ? pos : "—"; // ✅ fixed
+  document.getElementById("student-position").textContent = pos > 0 ? pos : "—";
   document.getElementById("student-ahead").textContent =
-    pos > 1 ? pos - 1 : "0"; // ✅ fixed
+    pos > 1 ? pos - 1 : "0";
   document.getElementById("student-total").textContent = total;
   const pct = pos > 0 && total > 0 ? ((total - pos + 1) / total) * 100 : 0;
   document.getElementById("student-prog").style.width = pct + "%";
@@ -399,6 +436,7 @@ function updateStudentTicket(all) {
 // ══════════════════════════════════════════════════════════════════
 window.studentLogout = function (removeFromQueue = false) {
   unregisterExitListeners();
+  clearSession(); // wipe saved session so next load goes to login
 
   if (removeFromQueue && window._state.studentId) {
     const status = window._state.studentData?.status;
@@ -427,8 +465,6 @@ window.studentLogout = function (removeFromQueue = false) {
 // ══════════════════════════════════════════════════════════════════
 //  PASSWORD HASHING  (SHA-256 + salt via Web Crypto)
 // ══════════════════════════════════════════════════════════════════
-
-/** Returns a random 16-byte hex salt string */
 function generateSalt() {
   const arr = new Uint8Array(16);
   crypto.getRandomValues(arr);
@@ -437,12 +473,6 @@ function generateSalt() {
     .join("");
 }
 
-/**
- * Hash password with salt using SHA-256.
- * @param {string} password
- * @param {string} salt  – hex string
- * @returns {Promise<string>}  hex digest
- */
 async function hashPassword(password, salt) {
   const encoder = new TextEncoder();
   const data = encoder.encode(salt + password);
@@ -470,7 +500,6 @@ window.adminLogin = async function () {
 
   try {
     const { firestoreDb, doc, getDoc } = window._fb;
-
     if (!firestoreDb) throw new Error("Firestore not available");
 
     const adminRef = doc(firestoreDb, "admins", username);
@@ -489,7 +518,6 @@ window.adminLogin = async function () {
       return;
     }
 
-    // ✅ Auth success
     window._state.role = "admin";
     window._state.adminUser = username;
     showPage("page-admin");
@@ -518,7 +546,7 @@ window.adminLogout = function () {
 };
 
 // ══════════════════════════════════════════════════════════════════
-//  SEED ADMIN  — run once in browser console to create an admin:
+//  SEED ADMIN  — run once in browser console:
 //  await seedAdmin("admin", "your_password_here")
 // ══════════════════════════════════════════════════════════════════
 window.seedAdmin = async function (username, password) {
@@ -549,10 +577,8 @@ function subscribeAdminQueue() {
   window._state.unsubscribers.push(unsub);
 }
 
-// AFTER
 function renderAdminQueues(all) {
   const waiting = sortQueue(all.filter((x) => x.status === "waiting"));
-
   const called = all.filter((x) => x.status === "called");
   const history = all
     .filter((x) => x.status === "completed" || x.status === "cancelled")
@@ -828,3 +854,9 @@ function timeAgo(ts) {
   if (diff < 3600) return Math.floor(diff / 60) + "m ago";
   return Math.floor(diff / 3600) + "h ago";
 }
+
+// ══════════════════════════════════════════════════════════════════
+//  RESTORE SESSION
+//  Must be the very last thing — all functions above must exist first.
+// ══════════════════════════════════════════════════════════════════
+restoreSession();
