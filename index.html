@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MediQueue — Privacy-Aware Patient Flow</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --teal: #0d9488;
+        --teal-light: #14b8a6;
+        --teal-pale: #ccfbf1;
+        --navy: #0f172a;
+        --slate: #1e293b;
+        --muted: #64748b;
+        --soft: #f8fafc;
+        --white: #ffffff;
+        --accent: #f0fdfa;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--white);
+        color: var(--navy);
+        overflow-x: hidden;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      .display-font {
+        font-family: "Syne", sans-serif;
+      }
+
+      /* ── NAVBAR ── */
+      .navbar {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      .navbar-brand {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 1.4rem;
+        color: var(--teal) !important;
+        letter-spacing: -0.5px;
+      }
+      .navbar-brand span {
+        color: var(--navy);
+      }
+      .nav-link {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--slate) !important;
+        transition: color 0.2s;
+      }
+      .nav-link:hover {
+        color: var(--teal) !important;
+      }
+      .btn-nav-login {
+        background: var(--teal);
+        color: white !important;
+        border-radius: 8px;
+        padding: 0.45rem 1.2rem !important;
+        font-weight: 600;
+        font-size: 0.88rem;
+        transition:
+          background 0.2s,
+          transform 0.15s;
+      }
+      .btn-nav-login:hover {
+        background: #0b7c72;
+        transform: translateY(-1px);
+      }
+
+      /* ── HERO ── */
+      .hero {
+        min-height: 92vh;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(
+          135deg,
+          #f0fdfa 0%,
+          #e0f2fe 60%,
+          #f0fdfa 100%
+        );
+        position: relative;
+        overflow: hidden;
+        padding: 5rem 0 4rem;
+      }
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: -120px;
+        right: -120px;
+        width: 520px;
+        height: 520px;
+        background: radial-gradient(
+          circle,
+          rgba(13, 148, 136, 0.15) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+      }
+      .hero::after {
+        content: "";
+        position: absolute;
+        bottom: -80px;
+        left: -80px;
+        width: 380px;
+        height: 380px;
+        background: radial-gradient(
+          circle,
+          rgba(14, 165, 233, 0.1) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+      }
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--teal-pale);
+        color: var(--teal);
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        margin-bottom: 1.5rem;
+        letter-spacing: 0.3px;
+      }
+      .hero h1 {
+        font-size: clamp(2.4rem, 5vw, 3.8rem);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -1.5px;
+        color: var(--navy);
+        margin-bottom: 1.2rem;
+      }
+      .hero h1 .highlight {
+        color: var(--teal);
+      }
+      .hero p.lead {
+        font-size: 1.1rem;
+        color: var(--muted);
+        max-width: 480px;
+        line-height: 1.7;
+        margin-bottom: 2rem;
+        font-weight: 300;
+      }
+      .tagline {
+        font-style: italic;
+        color: var(--teal);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+        font-weight: 500;
+      }
+      .btn-hero-primary {
+        background: var(--teal);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.85rem 2rem;
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .btn-hero-primary:hover {
+        background: #0b7c72;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(13, 148, 136, 0.3);
+      }
+      .btn-hero-outline {
+        border: 2px solid rgba(13, 148, 136, 0.35);
+        color: var(--teal);
+        border-radius: 10px;
+        padding: 0.82rem 1.8rem;
+        font-family: "Syne", sans-serif;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .btn-hero-outline:hover {
+        background: var(--teal-pale);
+        border-color: var(--teal);
+        color: var(--teal);
+      }
+      .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(13, 148, 136, 0.15);
+      }
+      .stat-item h4 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--teal);
+      }
+      .stat-item p {
+        font-size: 0.78rem;
+        color: var(--muted);
+        font-weight: 400;
+        margin: 0;
+      }
+
+      /* ── HERO VISUAL ── */
+      .hero-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.1);
+        padding: 1.5rem;
+        position: relative;
+        animation: float 4s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+      .queue-item {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 0.7rem 0.8rem;
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+      .queue-item.urgent {
+        background: #fff1f2;
+      }
+      .queue-item.waiting {
+        background: #f0fdfa;
+      }
+      .queue-item.called {
+        background: #eff6ff;
+      }
+      .queue-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+      }
+      .queue-num.urgent {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+      .queue-num.waiting {
+        background: #ccfbf1;
+        color: #0d9488;
+      }
+      .queue-num.called {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+      .queue-badge {
+        margin-left: auto;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+      .badge-urgent {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+      .badge-waiting {
+        background: #ccfbf1;
+        color: #0d9488;
+      }
+      .badge-called {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+      .card-header-label {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--navy);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      /* ── SECTION BASE ── */
+      section {
+        padding: 5rem 0;
+      }
+      .section-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--teal);
+        margin-bottom: 0.8rem;
+      }
+      .section-title {
+        font-size: clamp(1.8rem, 3vw, 2.5rem);
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: var(--navy);
+        margin-bottom: 1rem;
+      }
+      .section-sub {
+        color: var(--muted);
+        font-size: 1rem;
+        max-width: 520px;
+        line-height: 1.7;
+        font-weight: 300;
+      }
+
+      /* ── PROBLEM SECTION ── */
+      .problem-section {
+        background: var(--soft);
+      }
+      .problem-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(15, 23, 42, 0.07);
+        height: 100%;
+        transition:
+          box-shadow 0.2s,
+          transform 0.2s;
+      }
+      .problem-card:hover {
+        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+        transform: translateY(-3px);
+      }
+      .problem-icon {
+        width: 44px;
+        height: 44px;
+        background: #fff1f2;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        color: #dc2626;
+        font-size: 1.1rem;
+      }
+      .problem-card h5 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--navy);
+      }
+      .problem-card p {
+        font-size: 0.85rem;
+        color: var(--muted);
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      /* ── FEATURES ── */
+      .features-section {
+        background: white;
+      }
+      .feature-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--accent);
+        border: 1px solid var(--teal-pale);
+        color: var(--teal);
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.3rem 0.8rem;
+        border-radius: 999px;
+        margin-bottom: 0.8rem;
+      }
+      .feature-card {
+        border-radius: 18px;
+        padding: 2rem;
+        height: 100%;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.1);
+      }
+      .feature-card.card-a {
+        background: linear-gradient(135deg, #f0fdfa, #e0f2fe);
+        border: 1px solid var(--teal-pale);
+      }
+      .feature-card.card-b {
+        background: var(--soft);
+        border: 1px solid rgba(15, 23, 42, 0.07);
+      }
+      .feature-card.card-c {
+        background: linear-gradient(135deg, #faf5ff, #f0fdfa);
+        border: 1px solid #e9d5ff;
+      }
+      .feature-card.card-d {
+        background: linear-gradient(135deg, #fff7ed, #fef9c3);
+        border: 1px solid #fed7aa;
+      }
+      .feature-card.card-e {
+        background: var(--soft);
+        border: 1px solid rgba(15, 23, 42, 0.07);
+      }
+      .feature-card.card-f {
+        background: linear-gradient(135deg, #eff6ff, #f0fdfa);
+        border: 1px solid #bfdbfe;
+      }
+      .feat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        margin-bottom: 1.2rem;
+      }
+      .feat-icon.teal {
+        background: rgba(13, 148, 136, 0.15);
+        color: var(--teal);
+      }
+      .feat-icon.red {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+      .feat-icon.violet {
+        background: #ede9fe;
+        color: #7c3aed;
+      }
+      .feat-icon.amber {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .feat-icon.blue {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+      .feat-icon.green {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+      .feature-card h5 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--navy);
+      }
+      .feature-card p {
+        font-size: 0.85rem;
+        color: var(--muted);
+        line-height: 1.65;
+        margin: 0;
+      }
+
+      /* ── HOW IT WORKS ── */
+      .workflow-section {
+        background: var(--navy);
+        color: white;
+      }
+      .workflow-section .section-label {
+        color: var(--teal-light);
+      }
+      .workflow-section .section-title {
+        color: white;
+      }
+      .workflow-section .section-sub {
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .workflow-tabs .nav-link {
+        color: rgba(255, 255, 255, 0.55) !important;
+        font-family: "Syne", sans-serif;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        padding: 0.5rem 1.2rem;
+        transition: all 0.2s;
+        border: none;
+      }
+      .workflow-tabs .nav-link.active {
+        background: var(--teal) !important;
+        color: white !important;
+      }
+      .step-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.2rem;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 0.8rem;
+      }
+      .step-num {
+        width: 36px;
+        height: 36px;
+        background: var(--teal);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 0.85rem;
+        color: white;
+        flex-shrink: 0;
+      }
+      .step-item h6 {
+        font-size: 0.92rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: white;
+      }
+      .step-item p {
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      /* ── ROLES ── */
+      .roles-section {
+        background: white;
+      }
+      .role-card {
+        border-radius: 20px;
+        padding: 2.2rem;
+        height: 100%;
+      }
+      .role-card.student {
+        background: linear-gradient(145deg, #f0fdfa, #e0f2fe);
+        border: 1px solid var(--teal-pale);
+      }
+      .role-card.staff {
+        background: linear-gradient(145deg, #0f172a, #1e293b);
+        color: white;
+      }
+      .role-icon {
+        font-size: 2rem;
+        margin-bottom: 1.2rem;
+      }
+      .role-card h4 {
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin-bottom: 0.3rem;
+      }
+      .role-card.student h4 {
+        color: var(--navy);
+      }
+      .role-card.staff h4 {
+        color: white;
+      }
+      .role-card .sub {
+        font-size: 0.82rem;
+        margin-bottom: 1.2rem;
+      }
+      .role-card.student .sub {
+        color: var(--teal);
+      }
+      .role-card.staff .sub {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .role-feature {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+      }
+      .role-card.student .role-feature {
+        color: var(--slate);
+      }
+      .role-card.staff .role-feature {
+        color: rgba(255, 255, 255, 0.75);
+      }
+      .role-feature i {
+        color: var(--teal);
+        font-size: 0.9rem;
+        flex-shrink: 0;
+      }
+
+      /* ── CTA ── */
+      .cta-section {
+        background: linear-gradient(135deg, var(--teal) 0%, #0284c7 100%);
+        padding: 5rem 0;
+      }
+      .cta-section h2 {
+        color: white;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin-bottom: 1rem;
+      }
+      .cta-section p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        margin-bottom: 2rem;
+      }
+      .btn-cta {
+        background: white;
+        color: var(--teal);
+        border: none;
+        border-radius: 10px;
+        padding: 0.9rem 2.2rem;
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+      }
+      .btn-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        color: var(--teal);
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        background: var(--navy);
+        padding: 3rem 0 2rem;
+      }
+      footer .brand {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        color: var(--teal);
+        font-size: 1.2rem;
+      }
+      footer p {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.82rem;
+        margin: 0;
+      }
+      footer .divider {
+        border-color: rgba(255, 255, 255, 0.08);
+        margin: 1.5rem 0 1rem;
+      }
+
+      /* ── ANIMATIONS ── */
+      .fade-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+      }
+      .fade-up.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 768px) {
+        .hero-stats {
+          gap: 1.2rem;
+        }
+        .stat-item h4 {
+          font-size: 1.3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── NAVBAR ── -->
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="#">Medi<span>Queue</span></a>
+        <button
+          class="navbar-toggler border-0"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navMenu"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+          <ul
+            class="navbar-nav ms-auto align-items-lg-center gap-lg-2 mb-2 mb-lg-0"
+          >
+            <li class="nav-item">
+              <a class="nav-link" href="#features">Features</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#how-it-works">How It Works</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#roles">For Users</a>
+            </li>
+            <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+              <a class="nav-link btn-nav-login" href="mediqueue.html">Login</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ── HERO ── -->
+    <section class="hero">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <div class="hero-badge">
+              <i class="bi bi-shield-check-fill"></i> Privacy-Aware · School
+              Clinics
+            </div>
+            <h1>
+              Smarter <span class="highlight">Patient Flow</span><br />for
+              School Clinics
+            </h1>
+            <p class="tagline">"Transparent processes. Confidential care."</p>
+            <p class="lead">
+              MediQueue is a web-based queue management system that combines
+              fairness, emergency responsiveness, and strict data privacy —
+              built specifically for school clinic environments.
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+              <a href="dashboard.html" class="btn-hero-primary">
+                <i class="bi bi-box-arrow-in-right"></i> Login to MediQueue
+              </a>
+              <a href="#features" class="btn-hero-outline">
+                <i class="bi bi-play-circle"></i> See Features
+              </a>
+            </div>
+            <div class="hero-stats">
+              <div class="stat-item">
+                <h4>FCFS</h4>
+                <p>Queue Logic</p>
+              </div>
+              <div class="stat-item">
+                <h4>2</h4>
+                <p>User Roles</p>
+              </div>
+              <div class="stat-item">
+                <h4>Real-Time</h4>
+                <p>Status Updates</p>
+              </div>
+              <div class="stat-item">
+                <h4>0 Delay</h4>
+                <p>Emergency Care</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="hero-card ms-lg-4">
+              <div class="card-header-label">
+                <i
+                  class="bi bi-activity text-teal"
+                  style="color: var(--teal)"
+                ></i>
+                Live Queue — Today
+              </div>
+              <div class="queue-item urgent">
+                <div class="queue-num urgent">P1</div>
+                <div>
+                  <div
+                    style="font-size: 0.85rem; font-weight: 600; color: #0f172a"
+                  >
+                    Maria S.
+                  </div>
+                  <div style="font-size: 0.75rem; color: #94a3b8">
+                    Severe headache, dizziness
+                  </div>
+                </div>
+                <span class="queue-badge badge-urgent">EMERGENCY</span>
+              </div>
+              <div class="queue-item waiting">
+                <div class="queue-num waiting">02</div>
+                <div>
+                  <div
+                    style="font-size: 0.85rem; font-weight: 600; color: #0f172a"
+                  >
+                    Student #A21
+                  </div>
+                  <div style="font-size: 0.75rem; color: #94a3b8">
+                    General check-up
+                  </div>
+                </div>
+                <span class="queue-badge badge-waiting">WAITING</span>
+              </div>
+              <div class="queue-item called">
+                <div class="queue-num called">01</div>
+                <div>
+                  <div
+                    style="font-size: 0.85rem; font-weight: 600; color: #0f172a"
+                  >
+                    Student #B08
+                  </div>
+                  <div style="font-size: 0.75rem; color: #94a3b8">
+                    Consultation
+                  </div>
+                </div>
+                <span class="queue-badge badge-called">CALLED</span>
+              </div>
+              <div class="queue-item waiting" style="opacity: 0.5">
+                <div class="queue-num waiting">03</div>
+                <div>
+                  <div
+                    style="font-size: 0.85rem; font-weight: 600; color: #0f172a"
+                  >
+                    Student #C14
+                  </div>
+                  <div style="font-size: 0.75rem; color: #94a3b8">
+                    Fever, cold symptoms
+                  </div>
+                </div>
+                <span class="queue-badge badge-waiting">WAITING</span>
+              </div>
+              <div
+                style="
+                  margin-top: 1rem;
+                  padding-top: 1rem;
+                  border-top: 1px solid #f1f5f9;
+                  display: flex;
+                  align-items: center;
+                  gap: 0.5rem;
+                "
+              >
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    background: #10b981;
+                    border-radius: 50%;
+                    animation: pulse 2s infinite;
+                  "
+                ></div>
+                <span
+                  style="font-size: 0.78rem; color: #64748b; font-weight: 500"
+                  >4 in queue · 1 emergency priority</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PROBLEM ── -->
+    <section class="problem-section fade-up">
+      <div class="container">
+        <div class="text-center mb-5">
+          <div class="section-label">The Problem</div>
+          <h2 class="section-title">Current Clinic Challenges</h2>
+          <p class="section-sub mx-auto">
+            Manual queue handling creates confusion, delays, and privacy risks
+            in school clinic environments.
+          </p>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <div class="problem-card">
+              <div class="problem-icon"><i class="bi bi-shuffle"></i></div>
+              <h5>Unstructured Queue</h5>
+              <p>
+                Manual, first-come-first-serve with no system support leads to
+                disorganized waiting and inefficiency.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="problem-card">
+              <div class="problem-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+              </div>
+              <h5>Informal Priority</h5>
+              <p>
+                Urgent cases are handled without system support, creating
+                perceived unfairness among waiting students.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="problem-card">
+              <div class="problem-icon"><i class="bi bi-eye-slash"></i></div>
+              <h5>No Queue Visibility</h5>
+              <p>
+                Students have no insight into their queue position, leading to
+                frustration and repeated inquiries.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="problem-card">
+              <div class="problem-icon"><i class="bi bi-lock"></i></div>
+              <h5>Privacy Concerns</h5>
+              <p>
+                Sensitive patient information is accessed without role-based
+                restrictions in school environments.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="problem-card">
+              <div class="problem-icon"><i class="bi bi-person-x"></i></div>
+              <h5>Registration Barriers</h5>
+              <p>
+                Systems requiring pre-registration can delay or block urgent
+                emergency care for students in crisis.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="problem-card">
+              <div class="problem-icon">
+                <i class="bi bi-clock-history"></i>
+              </div>
+              <h5>Delayed Response</h5>
+              <p>
+                Lack of system coordination slows down clinic response times,
+                especially during peak hours.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FEATURES ── -->
+    <section class="features-section fade-up" id="features">
+      <div class="container">
+        <div class="text-center mb-5">
+          <div class="section-label">Key Features</div>
+          <h2 class="section-title">Everything a School Clinic Needs</h2>
+          <p class="section-sub mx-auto">
+            Six core capabilities that make MediQueue the complete solution for
+            school patient flow management.
+          </p>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card-a">
+              <div class="feat-icon teal"><i class="bi bi-list-ol"></i></div>
+              <div class="feature-pill">
+                <i class="bi bi-check-circle-fill"></i> Core
+              </div>
+              <h5>Structured Queue Management</h5>
+              <p>
+                Default First-Come, First-Served ordering with a fully organized
+                and trackable queue system for all visits.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card-b">
+              <div class="feat-icon red">
+                <i class="bi bi-arrow-up-circle-fill"></i>
+              </div>
+              <div class="feature-pill">
+                <i class="bi bi-check-circle-fill"></i> Priority
+              </div>
+              <h5>Priority Override Mechanism</h5>
+              <p>
+                Urgent cases are elevated to the top of the queue while
+                maintaining fairness for all other patients.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card-c">
+              <div class="feat-icon violet">
+                <i class="bi bi-lightning-charge-fill"></i>
+              </div>
+              <div class="feature-pill">
+                <i class="bi bi-star-fill"></i> Core Feature
+              </div>
+              <h5>Walk-In Emergency Handling</h5>
+              <p>
+                Staff can immediately assist patients via Quick Entry Mode — no
+                prior registration required for emergencies.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card-d">
+              <div class="feat-icon amber"><i class="bi bi-eye"></i></div>
+              <div class="feature-pill">
+                <i class="bi bi-check-circle-fill"></i> Transparency
+              </div>
+              <h5>Privacy-Aware Transparency</h5>
+              <p>
+                Students see their queue position and status. Private symptom
+                data is accessible only to clinic staff.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card-e">
+              <div class="feat-icon blue"><i class="bi bi-broadcast"></i></div>
+              <div class="feature-pill">
+                <i class="bi bi-check-circle-fill"></i> Live
+              </div>
+              <h5>Real-Time Status Tracking</h5>
+              <p>
+                Live updates across three statuses — Waiting, Called, and
+                Completed — keep everyone informed instantly.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card-f">
+              <div class="feat-icon green">
+                <i class="bi bi-shield-lock-fill"></i>
+              </div>
+              <div class="feature-pill">
+                <i class="bi bi-check-circle-fill"></i> Security
+              </div>
+              <h5>Role-Based Access Control</h5>
+              <p>
+                Two distinct roles ensure student data stays private while
+                giving clinic staff the full access they need.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── HOW IT WORKS ── -->
+    <section class="workflow-section fade-up" id="how-it-works">
+      <div class="container">
+        <div class="text-center mb-5">
+          <div class="section-label">How It Works</div>
+          <h2 class="section-title">Two Workflows, One System</h2>
+          <p
+            class="section-sub mx-auto"
+            style="color: rgba(255, 255, 255, 0.5)"
+          >
+            MediQueue handles both standard visits and walk-in emergencies
+            seamlessly.
+          </p>
+        </div>
+        <div class="d-flex justify-content-center mb-4">
+          <ul class="nav workflow-tabs gap-2" id="workflowTab">
+            <li class="nav-item">
+              <button
+                class="nav-link active"
+                data-bs-toggle="tab"
+                data-bs-target="#standard"
+              >
+                Standard Visit
+              </button>
+            </li>
+            <li class="nav-item">
+              <button
+                class="nav-link"
+                data-bs-toggle="tab"
+                data-bs-target="#emergency"
+              >
+                Walk-In Emergency
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="standard">
+            <div class="row justify-content-center">
+              <div class="col-lg-7">
+                <div class="step-item">
+                  <div class="step-num">1</div>
+                  <div>
+                    <h6>Student Logs In</h6>
+                    <p>
+                      Student accesses MediQueue and submits their visit details
+                      and symptoms through the self-registration form.
+                    </p>
+                  </div>
+                </div>
+                <div class="step-item">
+                  <div class="step-num">2</div>
+                  <div>
+                    <h6>System Assigns Queue Number</h6>
+                    <p>
+                      MediQueue automatically assigns a queue number and initial
+                      "Waiting" status to the patient.
+                    </p>
+                  </div>
+                </div>
+                <div class="step-item">
+                  <div class="step-num">3</div>
+                  <div>
+                    <h6>Placed in FCFS Order</h6>
+                    <p>
+                      Patient joins the queue in first-come, first-served order
+                      and can monitor their position in real time.
+                    </p>
+                  </div>
+                </div>
+                <div class="step-item">
+                  <div class="step-num">4</div>
+                  <div>
+                    <h6>Called & Marked Complete</h6>
+                    <p>
+                      Clinic staff calls the next patient, updates status to
+                      "Called", then "Completed" after the visit.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="emergency">
+            <div class="row justify-content-center">
+              <div class="col-lg-7">
+                <div class="step-item">
+                  <div class="step-num" style="background: #dc2626">!</div>
+                  <div>
+                    <h6>Student Proceeds Directly to Clinic</h6>
+                    <p>
+                      In an emergency, no prior system registration is required
+                      — the student goes directly to the clinic for immediate
+                      care.
+                    </p>
+                  </div>
+                </div>
+                <div class="step-item">
+                  <div class="step-num" style="background: #dc2626">2</div>
+                  <div>
+                    <h6>Staff Provides Immediate Assistance</h6>
+                    <p>
+                      Clinic staff attends to the patient without any system
+                      delays — emergency care is never gated by registration.
+                    </p>
+                  </div>
+                </div>
+                <div class="step-item">
+                  <div class="step-num" style="background: #dc2626">3</div>
+                  <div>
+                    <h6>Quick Entry Mode Activated</h6>
+                    <p>
+                      Staff logs the patient via Quick Entry Mode — a rapid
+                      input form designed for speed under pressure.
+                    </p>
+                  </div>
+                </div>
+                <div class="step-item">
+                  <div class="step-num" style="background: #dc2626">4</div>
+                  <div>
+                    <h6>Priority Status Assigned</h6>
+                    <p>
+                      Patient is assigned emergency priority and placed at the
+                      top of the queue automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ROLES ── -->
+    <section class="roles-section fade-up" id="roles">
+      <div class="container">
+        <div class="text-center mb-5">
+          <div class="section-label">User Roles</div>
+          <h2 class="section-title">Built for Two Perspectives</h2>
+          <p class="section-sub mx-auto">
+            MediQueue provides tailored interfaces for students and clinic staff
+            — each with appropriate access and controls.
+          </p>
+        </div>
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="role-card student">
+              <h4>Student (Patient)</h4>
+              <p class="sub">
+                Self-service access with privacy-safe visibility
+              </p>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> Self-register for clinic
+                visits
+              </div>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> View your queue number &
+                position
+              </div>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> Track real-time status
+                updates
+              </div>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> See general priority
+                indicators
+              </div>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> Private symptom data
+                stays hidden
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="role-card staff">
+              <h4>Clinic Staff (Admin)</h4>
+              <p class="sub">Full control with complete patient visibility</p>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> View full patient list &
+                details
+              </div>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> Access symptom
+                descriptions
+              </div>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> Call next patient from
+                dashboard
+              </div>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> Mark patients as
+                completed
+              </div>
+              <div class="role-feature">
+                <i class="bi bi-check-circle-fill"></i> Quick Entry for walk-in
+                emergencies
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section class="cta-section text-center fade-up">
+      <div class="container">
+        <h2>Ready to Streamline Your Clinic?</h2>
+        <p>
+          Log in to MediQueue and bring order, transparency, and
+          emergency-readiness to your school clinic today.
+        </p>
+        <a href="mediqueue.html" class="btn-cta">
+          <i class="bi bi-box-arrow-in-right"></i> Log In to MediQueue
+        </a>
+      </div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer>
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-6 mb-3 mb-md-0">
+            <div class="brand">MediQueue</div>
+            <p class="mt-1">Privacy-Aware Patient Flow for School Clinics</p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p>Built with HTML · CSS · Bootstrap 5 · Firebase</p>
+          </div>
+        </div>
+        <hr class="divider" />
+        <p class="text-center">
+          "Transparent processes. Confidential care." &nbsp;·&nbsp; MediQueue ©
+          2025
+        </p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Scroll animations
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("visible");
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+      document
+        .querySelectorAll(".fade-up")
+        .forEach((el) => observer.observe(el));
+
+      // Pulse animation for live dot
+      const style = document.createElement("style");
+      style.textContent = `@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }`;
+      document.head.appendChild(style);
+    </script>
+  </body>
+</html>
